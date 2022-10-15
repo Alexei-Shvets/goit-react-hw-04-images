@@ -7,7 +7,7 @@ export default function Modal({ largeImg, closeModal }) {
   useEffect(() => {
     window.addEventListener('keydown', onPressKey);
     return () => window.removeEventListener('keydown', onPressKey);
-  }, []);
+  });
 
   const onClickOverlay = ({ target, currentTarget }) => {
     if (target === currentTarget) closeModal(null);
