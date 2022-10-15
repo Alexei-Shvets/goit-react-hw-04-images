@@ -8,7 +8,7 @@ export default function Modal({ largeImg, closeModal }) {
   useEffect(() => {
     window.addEventListener('keydown', onPressKey);
     return () => window.removeEventListener('keydown', onPressKey);
-  }, []);
+  }, [closeModal]);
 
   //закрывает модалку при нажатии вне картинки(на бэкдроп)
   const onClickOverlay = ({ target, currentTarget }) => {
