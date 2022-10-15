@@ -1,39 +1,38 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Searchbar from 'components/Searchbar';
 import ImageGallery from 'components/ImageGallery';
 import Modal from 'components/Modal';
 import { AppStyled } from './App.styled.jsx';
 
-export default class App extends Component {
-  state = {
-    modalNow: null,
-    currentSearch: '',
-  };
-  //метод(вызывется в самой форме), который при сабмите формы переносит
-  //введенные/сохраненные данные из стейта серчбара в стейт арр
-  onSubmit = search => {
-    this.setState({ currentSearch: search });
-  };
-
-  onModal = url => {
-    this.setState({ modalNow: url });
+export default function App() {
+  const [modalNow, setModalNow] = useState(null);
+  const [currentSearch, setCurrentSearch] = useState('');
+  const [page, setPage] = useState(1);
+  
+  const onSubmit = search => {
+    setCurrentSearch(search);
+    setPage(1);
   };
 
-  render() {
-    const { modalNow } = this.state;
+  const onModal = url => {
+    setModalNow(url);
+  };
 
-    return (
-      //onSubmit - на 13 строке это имя пропса (идет передача аргумента в функцию)
+  const setNextPage = nextPage => {
+    setPage(page => page + nextPage);
+  };
+
+    return (      
       <AppStyled>
-        <Searchbar onSubmit={this.onSubmit} />
-        <ImageGallery
-          //при сабмите формы и обновления стейта из арр
-          //новые данные сетятся(записываются) в проп на 32 строке
-          search={this.state.currentSearch}
-          onClickToModal={this.onModal}
+        <Searchbar onSubmit={onSubmit} />
+        <ImageGallery          
+          search={currentSearch}
+          onClickToModal={onModal}
+          page={page}
+          setPage={setNextPage}
         />
-        {modalNow && <Modal largeImg={modalNow} closeModal={this.onModal} />}
+        {modalNow && <Modal largeImg={modalNow} closeModal={onModal} />}
       </AppStyled>
     );
   }
-}
+

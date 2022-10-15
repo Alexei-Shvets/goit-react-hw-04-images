@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../service/pixabayApi';
 import ImageGalleryItem from 'components/ImageGalleryItem';
 import Button from 'components/Button';
@@ -6,85 +6,57 @@ import { List } from './ImageGallery.styled';
 import propTypes from 'prop-types';
 import Spinner from 'components/Spinner';
 
-//в этом файле/компоненте делаю http 
-//запросы(начинка пиксебейАпи импортируется внутри данного компонента)
-export default class ImageGallery extends Component {
-  static propTypes = {
-    search: propTypes.string.isRequired,
-    onClickToModal: propTypes.func.isRequired,
-  };
-  // в этом стейте хранятся данные, которые пришли с апишки(бэкэнда) после фетча
-  state = {
-    status: 'idle',
-    error: null,
-    images: [],
-    page: 1,
-  };
-  //стреляет когда компонент обновляется(стейт)
-  //search это имя пропса на 26 строке в арр(значение - this.state.currentSearch)
-  componentDidUpdate(prevProps, prevState) {
-    const prevSearch = prevProps.search;
-    const nextSearch = this.props.search;
-    const prevPage = prevState.page;
-    const nextPage = this.state.page;
-    //проверяю, если предыдущий пропс(значение в стейте) и текущий не равны - я делаю новый стейт
-    //и фетч(строка 45 - апи)
-    //с одной страницей и массивом картинок
-    //данная проверка делается, чтобы компонент не зациклился
-    if (prevSearch !== nextSearch) {
-      this.setState({ page: 1, images: [] });
+//в этом файле делаю http запросы(начинка пиксебейАпи импортируется внутри данного компонента)
+export default function ImageGallery({
+  search,
+  onClickToModal,
+  page,
+  setPage,
+}) {
+  const [status, setStatus] = useState('idle');
+  const [error, setError] = useState(null);
+  const [images, setImages] = useState([]);
+
+    useEffect(() => {
+    if (!search) return;
+
+    if (page === 1) {
+      setImages([]);
+      setStatus('idle');
+      setError(null);
     }
 
-    if (
-      (prevSearch !== nextSearch && nextPage === 1) ||
-      prevPage !== nextPage
-    ) {
-      this.setState({
-        status: 'pending',
+    setStatus('pending');
+    api(search, page)
+      .then(resp => {
+        setImages(images => [...images, ...resp.hits]);
+        setStatus('resolved');
+        scrollToBottom();
+      })
+      .catch(error => {
+        setError(error.message);
+        setStatus('rejected');
+        setImages([]);
       });
-      api(nextSearch, this.state.page)
-        .then(resp => {
-          this.setState(state => {
-            return {
-              images: [...state.images, ...resp.hits],
-              status: 'resolved',
-            };
-          });
-          this.scrollToBottom();
-        })
-        .catch(error => {
-          this.setState({
-            error: error.message,
-            status: 'rejected',
-            page: 1,
-            images: [],
-          });
-        });
-    }
-  }
+  }, [search, page]);
 
-  onClickButton = () => {
-    this.setState(state => ({
-      page: state.page + 1,
-    }));
+  const onClickButton = () => {
+    setPage(1);
   };
 
-  scrollToBottom = () => {
+  const scrollToBottom = () => {
     window.scrollTo({
       top: document.body.clientHeight,
       behavior: 'smooth',
     });
-  };
-
-  render() {
-    const { status, error, images } = this.state;
+  };  
 
     if (status === 'rejected') {
       return <h1>{error}</h1>;
     }
 
     return (
-      //если в стейте длина массива картинок больше нуля, рендерится
+      //если длина массива картинок больше нуля, рендерится
       //список список, в котором формируются лишки (картинки)
       <>
         {images.length !== 0 && (
@@ -95,7 +67,7 @@ export default class ImageGallery extends Component {
                   key={id}
                   url={webformatURL}
                   tags={tags}
-                  onClickToModal={this.props.onClickToModal}
+                  onClickToModal={onClickToModal}
                   largeImageURL={largeImageURL}
                 />
               );
@@ -103,8 +75,12 @@ export default class ImageGallery extends Component {
           </List>
         )}
         {status === 'pending' && <Spinner />}
-        {status === 'resolved' && <Button onClickButton={this.onClickButton} />}
+        {status === 'resolved' && <Button onClickButton={onClickButton} />}
       </>
     );
-  }
 }
+  
+  ImageGallery.propTypes = {
+    search: propTypes.string.isRequired,
+    onClickToModal: propTypes.func.isRequired,
+};

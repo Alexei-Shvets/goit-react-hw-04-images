@@ -1,35 +1,23 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { SearchbarStyled } from './Searchbar.styled';
 import { AiOutlineSearch } from 'react-icons/ai';
 import propTypes from 'prop-types';
-export default class Searchbar extends Component {
-  state = {
-    search: '',
+export default function Searchbar({ onSubmit }) {
+  const [search, setSearch] = useState('');
+
+  const submitForm = event => {
+    event.preventDefault();
+
+    if (search.trim() === '') return alert('You do not write anything');
+
+    onSubmit(search);
+    setSearch('');
   };
 
-  handleInputSearch = ({ target }) => {
-    return this.setState({ [target.name]: target.value });
-  };
-  //метод, который записывает/сохраняет в локальный стейт на 6 строке
-  //введенные данныe. На 20 строке условие, если в инпут ничего не введено, 
-  //то выводится алерт
-  submitForm = event => {
-    event.preventDefault();
-    const { search } = this.state;
-    //метод трим убираем пробелы слева-справа, чтобы не обхитрили пользователи
-    if (search.trim() === '') return alert('You do not write anything');
-    //при сабмите этой формы, вызывается метод из арр(13 строка) onSubmit(строка вызова в арр - 27) и 
-    //передается ему значение сохраненное в стейте формы
-    this.props.onSubmit(search);
-    this.setState({ search: '' });
-  };
-  // onSubmit на 32 - это регистрация события на компоненте форм.
-  render() {
-    const { search } = this.state;
     return (
       <SearchbarStyled>
         
-        <form onSubmit={this.submitForm}>
+        <form onSubmit={submitForm}>
           <button type="submit">
             <AiOutlineSearch stroke="black" size={25} />
           </button>
@@ -40,13 +28,13 @@ export default class Searchbar extends Component {
             placeholder="Search images and photos 📷"
             name="search"
             value={search}
-            onChange={this.handleInputSearch}
+            onChange={({ target }) => setSearch(target.value)}
           />
         </form>
       </SearchbarStyled>
     );
   }
-}
+
 
 Searchbar.propTypes = {
   onSubmit: propTypes.func.isRequired,
